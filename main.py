@@ -1,6 +1,15 @@
-def main():
-    print("Hello from teaching-assistant!")
+#-----------------------------------------------------------------------
+#                           Import Statements
+#-----------------------------------------------------------------------
+from fastapi import FastAPI
+app = FastAPI()
 
 
-if __name__ == "__main__":
-    main()
+#-----------------------------------------------------------------------
+#                            Logic Statements
+#-----------------------------------------------------------------------
+
+# Health Check Route
+@app.get("/health_check")
+def health_check():
+    return {"message" : "Its Working!!!"}
