@@ -2,14 +2,14 @@
 #                           Import Statements
 #-----------------------------------------------------------------------
 from fastapi import FastAPI
+from auth.route import router as auth_router
+
+#-----------------------------------------------------------------------
+#                           Logic Statements
+#-----------------------------------------------------------------------
 app = FastAPI()
+app.include_router(auth_router)
 
-
-#-----------------------------------------------------------------------
-#                            Logic Statements
-#-----------------------------------------------------------------------
-
-# Health Check Route
-@app.get("/health_check")
-def health_check():
-    return {"message" : "Its Working!!!"}
+@app.get("/")
+def home():
+    return {"message" : "Welcome to the user Management API"}

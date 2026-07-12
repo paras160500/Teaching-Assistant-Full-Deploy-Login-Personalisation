@@ -1,0 +1,5 @@
+1: Create a User Schema                                                                     ✔️
+2: Hash password function using bcrypt                                                      ✔️
+3: Export api route for students and teachers                                               ✔️
+4: Create a authentication function to check if the user is signed up or not                ✔️
+5: Export login api routes(POST)                                                            ✔️

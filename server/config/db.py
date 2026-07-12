@@ -1,15 +1,23 @@
 #-----------------------------------------------------------------------
 #                           Import Statements
 #-----------------------------------------------------------------------
-from fastapi import FastAPI
-app = FastAPI()
+
+import os 
+from dotenv import load_dotenv
+from pymongo import MongoClient
+load_dotenv()
 
 
 #-----------------------------------------------------------------------
-#                            Logic Statements
+#                           Logic Statements
 #-----------------------------------------------------------------------
 
-# Health Check Route
-@app.get("/health_check")
-def health_check():
-    return {"message" : "Its Working!!!"}
+
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME", "test_db")
+
+client=MongoClient(MONGO_URI)
+db=client[DB_NAME]
+
+# User collection
+users_collection = db["users"]
