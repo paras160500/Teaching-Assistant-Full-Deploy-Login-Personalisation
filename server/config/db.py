@@ -21,4 +21,7 @@ db=client[DB_NAME]
 
 # User collection
 users_collection = db["users"]
+# Document collection
 chunk_collection = db['text']
+# Chat collection
+chat_history_collection = db['chat_history']

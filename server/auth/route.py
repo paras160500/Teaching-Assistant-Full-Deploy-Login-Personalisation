@@ -38,7 +38,9 @@ def authenticate(credentials : HTTPBasicCredentials = Depends(security)):
         "username" : user_record['username'],
         "fullname" : user_record['fullname'],
         "email" : user_record['email'],
-        "role" : user_record['role']
+        "role" : user_record['role'],
+        "grade" : user_record['grade'],
+        "user_id" : str(user_record['_id'])
     }
 
 # Route Createion for student signup

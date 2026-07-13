@@ -1,0 +1,104 @@
+#-----------------------------------------------------------------------
+#                           imoport Statements
+#-----------------------------------------------------------------------
+import os, asyncio
+from dotenv import load_dotenv
+from pinecone import Pinecone
+from langchain_openai import OpenAIEmbeddings
+from langchain_core.prompts import PromptTemplate
+from langchain_groq import ChatGroq
+from config.db import chunk_collection
+
+# For env 
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPEN_AI_API")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
+
+
+#-----------------------------------------------------------------------
+#                           Logic Statements
+#-----------------------------------------------------------------------
+
+# Init Pinecone client
+pc = Pinecone(api_key=PINECONE_API_KEY)
+index = pc.Index(name=PINECONE_INDEX_NAME)
+
+# Defining Embed model
+embed_model = OpenAIEmbeddings(
+    api_key=os.getenv("OPEN_AI_API"),
+    model="text-embedding-3-small"
+)
+
+# Define model
+llm = ChatGroq(model = "llama-3.3-70b-versatile" , temperature=0.3 , api_key=GROQ_API_KEY)
+
+# Define chat prompt 
+rag_prompt=PromptTemplate.from_template(
+    """
+You are a helpful educational assistant.
+Answer the question using ONLY the context below.
+
+Question:
+{question}
+
+Context:
+{context}
+
+If relevant, mention the document source.
+
+"""
+)
+
+# Define the RAG Chain
+rag_chain = rag_prompt | llm 
+
+# Define the chat function
+async def answer_query(query : str , user_role : str , user_grade : int) -> dict:
+    """
+        Will fetch doc from  pinecone and with that result get the doc id and then 
+        it will check across the mongo and find the docs and then combine them
+        and pass to llm in order to generate the answer of the query
+        Args:
+            query(str) : User question
+            user_role(str) : Role of user 
+            user_grade(int) : Mostly grade of student
+        Returns:
+            return a dict having two key as answer and sources
+    """
+    # Call embedding model to generate query embedding
+    embedding = await asyncio.to_thread(embed_model.embed_query , query)
+    # Retrieve relevant embeddings from the pinecone
+    results = await asyncio.to_thread(
+        index.query , vector = embedding , top_k = 5,include_metadata = True,filter={
+            "grade":user_grade,
+            "role":{"$in":["Public",user_role]}
+        }
+    )
+    # Validation check
+    if not results.get("matches"):
+        return {"answer" : "No relevent information found." , "sources" : []}
+    
+    # Getting context from mongo 
+    chunk_ids = [m['id'] for m in results['matches']]                       # Getting the chunk id
+    docs = list(chunk_collection.find({"chunk_id":{"$in":chunk_ids}}))      # Getting the docs
+    if not docs:                                                            # Simple Validation
+        return {"answer":"Context unavailable","sources":[]}
+    doc_map = {d['chunk_id']:d for d in docs}                               # Maping the doc with id                   
+    ordered_map = [doc_map[cid] for cid in chunk_ids if cid in doc_map]     # Ordering the doc
+    context = "\n\n".join(d['text'] for d in ordered_map)                   # Generating the context
+    sources=list({ d["source"] for d in ordered_map})                       # Getting Sources
+    response = await asyncio.to_thread(                                     # Getting result from rag chain
+        rag_chain.invoke , {"question" : query , "context" : context}
+    )
+    answer_text=(                                                           # Getting content from the result
+        response.content                                                    # If not content then response in string
+        if hasattr(response,"content")
+        else str(response)
+    )
+
+    return {
+        "answer" : answer_text,
+        "sources" : sources
+    }
