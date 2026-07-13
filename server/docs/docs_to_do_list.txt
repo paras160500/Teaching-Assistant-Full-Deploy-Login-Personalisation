@@ -1,0 +1,3 @@
+1: From PDF make chunking                                                                    ✔️
+2: Large data will save to mongodb
+3: metadata and embedding storage on Pinecone 
