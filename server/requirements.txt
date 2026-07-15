@@ -1,22 +1,20 @@
 # Web Framework
 fastapi
 uvicorn[standard]
-python-multipart  # for file uploads
+python-multipart
 
 # LangChain & Ecosystem
 langchain
 langchain-community
 langchain-core
 langchain-groq
+langchain-openai
 
 # Vectorstore
 pinecone
 
-# Embeddings
-langchain-openai
-
 # PDF Parsing
-PyPDF  # backend for PyPDFLoader via langchain_community
+PyPDF
 
 # Environment Variables
 python-dotenv
@@ -26,10 +24,11 @@ pydantic
 requests
 tqdm
 
-# Authentication
-pymongo[bson] 
-bcrypt 
+# Database & Authentication
+pymongo==4.10.1
+dnspython>=2.6.1
+certifi>=2024.0.0
+bcrypt
 
-
+# UI (if required)
 streamlit
-requests
