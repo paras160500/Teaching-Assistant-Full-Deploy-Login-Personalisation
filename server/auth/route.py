@@ -100,4 +100,4 @@ def login(user = Depends(authenticate)):
         Args:
             user(str) : the username in order to check its valid or not 
     """
-    return {"message" : f"Welcome, {user}"} 
+    return {"message" : f"Welcome, {user['username']}" , "role" : user['role']} 
